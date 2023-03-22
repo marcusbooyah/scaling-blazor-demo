@@ -9,7 +9,7 @@ metadata:
   annotations:
     reloader.stakater.com/auto: 'true'
 spec:
-  replicas: 1
+  replicas: {{ .Values.proxy.replicaCount }}
   selector:
     matchLabels:
       {{- include "blazor.selectorLabels" . | nindent 6 }}
@@ -21,6 +21,13 @@ spec:
         {{- include "blazor.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: signalr-proxy
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "blazor.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       volumes:
         - name: config
           configMap:
@@ -28,7 +35,10 @@ spec:
             defaultMode: 420
       containers:
         - name: neon-signalr-proxy
-          image: ghcr.io/neonkube-dev/neon-signalr-proxy:neonkube-0.7.0-alpha
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.proxy.image.repository }}:{{ .Values.proxy.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.proxy.image.pullPolicy }}
           ports:
             - name: http-web
               containerPort: 80
@@ -43,7 +53,7 @@ spec:
           volumeMounts:
             - name: config
               readOnly: true
-              mountPath: /etc/neonkube/neon-signalr-proxy
+              mountPath: /etc/neonsdk/neon-signalr-proxy
           startupProbe:
             exec:
               command:

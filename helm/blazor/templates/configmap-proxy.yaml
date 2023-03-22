@@ -8,7 +8,10 @@ data:
     port: 80
     backends:
       - hosts: 
-          - {{ include "blazor.fullname" . }}.desktop.neoncluster.io
+        {{- with .Values.ingress.hosts }}
+        hosts:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
         destination: {{ include "blazor.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
         port: 80
         scheme: http

@@ -10,6 +10,23 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
+proxy:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/neonkube-stage/neon-signalr-proxy
+    pullPolicy: Always
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "latest"
+  
+ingress:
+  gateways:
+    - neon-ingress/neoncluster-gateway
+  hosts:
+    - scaling-blazor-demo.desktop.neoncluster.io
+
+blazor:
+  natsUri: nats://nats:4222
+
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""

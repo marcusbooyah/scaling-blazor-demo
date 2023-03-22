@@ -4,10 +4,14 @@ metadata:
   name: {{ include "blazor.fullname" . }}
   namespace: {{ .Release.Namespace }}
 spec:
+  {{- with .Values.ingress.gateways }}
   gateways:
-    - neon-ingress/neoncluster-gateway
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.ingress.hosts }}
   hosts:
-    - {{ include "blazor.fullname" . }}.desktop.neoncluster.io
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   http:
     - route:
         - destination:

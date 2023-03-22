@@ -39,7 +39,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: NATS_URI
-              value: nats://nats:4222
+              value: {{ .Values.blazor.natsUri }}
           ports:
             - name: http-web
               containerPort: 80
