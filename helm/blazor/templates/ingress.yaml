@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ include "blazor.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  gateways:
+    - neon-ingress/neoncluster-gateway
+  hosts:
+    - {{ include "blazor.fullname" . }}.desktop.neoncluster.io
+  http:
+    - route:
+        - destination:
+            host: {{ include "signalr-proxy.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+            port:
+              number: 80

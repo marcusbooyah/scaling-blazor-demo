@@ -1,0 +1,15 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "signalr-proxy.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+data:
+  config.yaml: |
+    port: 80
+    backends:
+      - hosts: 
+          - {{ include "blazor.fullname" . }}.desktop.neoncluster.io
+        destination: {{ include "blazor.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+        port: 80
+        scheme: http
+    sessionStore: cookie

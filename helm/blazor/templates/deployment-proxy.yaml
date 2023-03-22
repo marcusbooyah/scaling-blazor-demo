@@ -1,0 +1,87 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: {{ include "signalr-proxy.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "blazor.labels" . | nindent 4 }}
+    app.kubernetes.io/component: signalr-proxy
+  annotations:
+    reloader.stakater.com/auto: 'true'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "blazor.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: signalr-proxy
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        {{- include "blazor.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: signalr-proxy
+    spec:
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "signalr-proxy.fullname" . }}
+            defaultMode: 420
+      containers:
+        - name: neon-signalr-proxy
+          image: ghcr.io/neonkube-dev/neon-signalr-proxy:neonkube-0.7.0-alpha
+          ports:
+            - name: http-web
+              containerPort: 80
+              protocol: TCP
+          env:
+            - name: COOKIE_CIPHER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "signalr-proxy.fullname" . }}
+                  key: CIPHER_KEY
+          resources: {}
+          volumeMounts:
+            - name: config
+              readOnly: true
+              mountPath: /etc/neonkube/neon-signalr-proxy
+          startupProbe:
+            exec:
+              command:
+                - /health-check
+            initialDelaySeconds: 1
+            failureThreshold: 30
+            periodSeconds: 5
+            timeoutSeconds: 1
+          livenessProbe:
+            exec:
+              command:
+                - /health-check
+            initialDelaySeconds: 1
+            periodSeconds: 10
+            timeoutSeconds: 1
+          readinessProbe:
+            exec:
+              command:
+                - /ready-check
+            initialDelaySeconds: 1
+            periodSeconds: 10
+            timeoutSeconds: 1
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: Always
+          securityContext: {}
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      serviceAccountName: {{ include "blazor.serviceAccountName" . }}
+      serviceAccount: {{ include "blazor.serviceAccountName" . }}
+      securityContext: {}
+      schedulerName: default-scheduler
+      priorityClassName: neon-app
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
